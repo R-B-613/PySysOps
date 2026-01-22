@@ -1,75 +1,44 @@
-import sys
-from search.file_search import search_file_by_name, search_file_by_ext
-from search.text_search import search_text_in_file, search_text_in_dir
-
+import argparse
+from search.file_ops import search_files, batch_rename
+from system.process_ops import list_processes, kill_process
 
 def main():
-    if len(sys.argv) < 2:
-        print_usage()
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="PySysOps: Linux System Management CLI Tool")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    command = sys.argv[1]
+    # --- Search Command ---
+    search_parser = subparsers.add_parser("search", help="Recursive file search")
+    search_parser.add_argument("path", help="Root directory to start search")
+    search_parser.add_argument("--key", required=True, help="Keyword to search in filename")
+    search_parser.add_argument("--ext", help="Filter by file extension (e.g., .py)")
 
-    if command == "file":
-        handle_file(sys.argv[2:])
-    elif command == "text":
-        handle_text(sys.argv[2:])
+    # --- Rename Command ---
+    rename_parser = subparsers.add_parser("rename", help="Batch rename files")
+    rename_parser.add_argument("dir", help="Target directory")
+    rename_parser.add_argument("--prefix", required=True, help="Prefix to add to files")
+    rename_parser.add_argument("--ext", required=True, help="Target extension")
+
+    # --- Process List Command ---
+    ps_parser = subparsers.add_parser("ps", help="List active processes")
+    ps_parser.add_argument("--my", action="store_true", help="Show only my processes")
+
+    # --- Kill Command ---
+    kill_parser = subparsers.add_parser("kill", help="Terminate a process")
+    kill_parser.add_argument("pid", help="Process ID to terminate")
+    kill_parser.add_argument("--force", action="store_true", help="Force kill (SIGKILL)")
+
+    args = parser.parse_args()
+
+    if args.command == "search":
+        search_files(args.path, args.key, args.ext)
+    elif args.command == "rename":
+        batch_rename(args.dir, args.prefix, args.ext)
+    elif args.command == "ps":
+        list_processes(args.my)
+    elif args.command == "kill":
+        kill_process(args.pid, args.force)
     else:
-        print("Unknown command")
-        print_usage()
-
-
-def handle_file(args):
-    if len(args) < 2:
-        print("Usage: file <name|ext> <value> [--path PATH]")
-        return
-
-    subcommand = args[0]
-    value = args[1]
-    path = "."
-
-    if "--path" in args:
-        idx = args.index("--path")
-        if idx + 1 < len(args):
-            path = args[idx + 1]
-
-    if subcommand == "name":
-        search_file_by_name(value, path)
-    elif subcommand == "ext":
-        search_file_by_ext(value, path)
-    else:
-        print("Unknown file subcommand")
-
-
-def handle_text(args):
-    if len(args) < 4:
-        print("Usage: text word <word> --file FILE | --path DIR")
-        return
-
-    subcommand = args[0]
-    word = args[1]
-    option = args[2]
-    target = args[3]
-
-    if subcommand != "word":
-        print("Unknown text subcommand")
-        return
-
-    if option == "--file":
-        search_text_in_file(word, target)
-    elif option == "--path":
-        search_text_in_dir(word, target)
-    else:
-        print("Unknown option")
-
-
-def print_usage():
-    print("Examples:")
-    print("  python3 main.py file name test")
-    print("  python3 main.py file ext .py --path .")
-    print("  python3 main.py text word hello --file test.txt")
-    print("  python3 main.py text word error --path .")
-
+        parser.print_help()
 
 if __name__ == "__main__":
     main()
