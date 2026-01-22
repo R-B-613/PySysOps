@@ -1,6 +1,5 @@
 import os
 
-
 def search_files(start_path, keyword, extension=None):
     """
     Recursively searches for files matching a keyword and/or extension.
