@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser(prog = 'PySysOps', description =
 'It simplifies daily tasks such as recursive file searching, batch file renaming, and process '
 'monitoring in Linux environments.', epilog = 'TODO - explain for help command')
 
-parser.add_argument(default = 'file')
+parser.add_argument('--type', default = 'file', help = "Type of item to process")
 
 args = parser.parse_args()
-print(args.default)
+print(args.type)
